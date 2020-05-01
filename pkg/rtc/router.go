@@ -42,10 +42,12 @@ func NewRouter(id string) *Router {
 	}
 }
 
-func (r *Router) InitPlugins(config plugins.Config) {
+func (r *Router) InitPlugins(config plugins.Config) error {
+	log.Infof("Router.InitPlugins config=%+v", config)
 	if r.pluginChain != nil {
-		r.pluginChain.Init(config)
+		return r.pluginChain.Init(config)
 	}
+	return nil
 }
 
 func (r *Router) start() {

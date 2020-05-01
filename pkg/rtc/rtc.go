@@ -40,6 +40,11 @@ func InitPlugins(config plugins.Config) {
 	log.Infof("InitPlugins pluginsConfig=%+v", pluginsConfig)
 }
 
+// CheckPlugins plugins config
+func CheckPlugins(config plugins.Config) error {
+	return plugins.CheckPlugins(config)
+}
+
 // InitRTP rtp port
 func InitRTP(port int, kcpKey, kcpSalt string) error {
 	// show stat about all pipelines
@@ -106,7 +111,11 @@ func AddRouter(id string) *Router {
 	routerLock.Lock()
 	defer routerLock.Unlock()
 	routers[id] = NewRouter(id)
-	routers[id].InitPlugins(pluginsConfig)
+	if err := routers[id].InitPlugins(pluginsConfig); err != nil {
+		log.Errorf("rtc.AddRouter InitPlugins err=%v", err)
+		return nil
+	}
+
 	return routers[id]
 }
 

@@ -1,11 +1,16 @@
 package plugins
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/pion/ion/pkg/log"
 	"github.com/pion/ion/pkg/rtc/transport"
 	"github.com/pion/rtp"
+)
+
+var (
+	errInvalidPlugins = errors.New("invalid plugins, make sure at least one plugin is on")
 )
 
 // Plugin some interfaces
@@ -56,10 +61,28 @@ func (p *PluginChain) ReadRTP() *rtp.Packet {
 	return <-last.ReadRTP()
 }
 
-func (p *PluginChain) Init(config Config) {
+func CheckPlugins(config Config) error {
+	log.Infof("PluginChain.CheckPlugins config=%+v", config)
+
+	//check one plugin is on
+	oneOn := false
+	if config.JitterBuffer.On {
+		oneOn = true
+	}
+
+	//check second plugin
+	//...
+	if !oneOn {
+		return errInvalidPlugins
+	}
+
+	return nil
+}
+
+func (p *PluginChain) Init(config Config) error {
 	p.config = config
 
-	log.Infof("PluginChain.Init config=%v", config)
+	log.Infof("PluginChain.Init config=%+v", config)
 	// first, add JitterBuffer plugin
 	if config.JitterBuffer.On {
 		log.Infof("PluginChain.Init config.JitterBuffer.On=true config=%v", config)
@@ -79,6 +102,11 @@ func (p *PluginChain) Init(config Config) {
 		}
 		plugin.AttachPre(p.plugins[i-1])
 	}
+
+	if p.GetPluginsTotal() <= 0 {
+		return errInvalidPlugins
+	}
+	return nil
 }
 
 func (p *PluginChain) On() bool {
@@ -110,6 +138,13 @@ func (p *PluginChain) GetPlugin(id string) Plugin {
 		}
 	}
 	return nil
+}
+
+// GetPluginsTotal get plugin total count
+func (p *PluginChain) GetPluginsTotal() int {
+	p.pluginLock.RLock()
+	defer p.pluginLock.RUnlock()
+	return len(p.plugins)
 }
 
 // DelPlugin del plugin

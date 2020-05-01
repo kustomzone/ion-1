@@ -95,9 +95,9 @@ func (j *JitterBuffer) AttachPub(t transport.Transport) {
 				continue
 			}
 
-			if !util.IsVideo(pkt.PayloadType) {
-				continue
-			}
+			// if !util.IsVideo(pkt.PayloadType) {
+			// continue
+			// }
 
 			err = j.WriteRTP(pkt)
 			if err != nil {
@@ -184,6 +184,10 @@ func (j *JitterBuffer) rembLoop() {
 
 			time.Sleep(time.Duration(j.config.REMBCycle) * time.Second)
 			for _, buffer := range j.GetBuffers() {
+				// only calc video recently
+				if !util.IsVideo(buffer.GetPayloadType()) {
+					continue
+				}
 				j.lostRate, j.bandwidth = buffer.GetLostRateBandwidth(uint64(j.config.REMBCycle))
 				var bw uint64
 				if j.lostRate == 0 && j.bandwidth == 0 {

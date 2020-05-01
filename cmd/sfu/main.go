@@ -49,6 +49,9 @@ func init() {
 		},
 	}
 
+	if err := rtc.CheckPlugins(pluginConfig); err != nil {
+		panic(err)
+	}
 	rtc.InitPlugins(pluginConfig)
 }
 
